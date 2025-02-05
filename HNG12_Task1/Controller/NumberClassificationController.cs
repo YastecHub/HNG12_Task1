@@ -20,7 +20,7 @@ namespace HNG12_Task1.Controller
         public IActionResult ClassifyNumber([FromQuery] string number)
         {
 
-            // ✅ Validate input early and return immediately
+            //Validate input early and return immediately
             if (string.IsNullOrWhiteSpace(number) || !int.TryParse(number, out int parsedNumber))
             {
                 return BadRequest(new
