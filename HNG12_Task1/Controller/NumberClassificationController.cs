@@ -22,7 +22,7 @@ namespace HNG12_Task1.Controller
         {
             var numberQuery = HttpContext.Request.Query["number"].ToString();
 
-            // ✅ Custom validation: Empty number parameter
+            // ✅ Validate input
             if (string.IsNullOrWhiteSpace(numberQuery))
             {
                 return BadRequest(new { error = true, number = "" });
@@ -33,18 +33,25 @@ namespace HNG12_Task1.Controller
                 return BadRequest(new { error = true, number = numberQuery });
             }
 
-            // Asynchronously fetch properties and fun fact
+            // ✅ Run calculations synchronously (fast operations)
             var isPrime = IsPrime(parsedNumber);
             var isPerfect = IsPerfect(parsedNumber);
             var isArmstrong = IsArmstrong(parsedNumber);
             var digitSum = GetDigitSum(parsedNumber);
-            var funFact = await GetFunFact(parsedNumber);
 
-            // Determine the number properties
+            // ✅ Prepare properties list (sorted for consistency)
             var properties = new List<string> { parsedNumber % 2 == 0 ? "even" : "odd" };
             if (isArmstrong) properties.Add("armstrong");
+            properties.Sort(); // Ensures predictable order
 
-            // Build and return the response
+            // ✅ Fetch fun fact asynchronously with timeout (non-blocking)
+            var funFactTask = GetFunFact(parsedNumber);
+            var timeoutTask = Task.Delay(500); // Limit fun fact fetch to 500ms
+            var completedTask = await Task.WhenAny(funFactTask, timeoutTask);
+
+            var funFact = completedTask == funFactTask ? await funFactTask : "Fun fact unavailable";
+
+            // ✅ Return response
             return Ok(new NumberClassificationResponse
             {
                 Number = parsedNumber,
@@ -55,6 +62,7 @@ namespace HNG12_Task1.Controller
                 fun_fact = funFact
             });
         }
+
 
         // Determine if the number is prime
         private bool IsPrime(int number)
