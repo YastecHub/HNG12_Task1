@@ -1,5 +1,4 @@
 ﻿using HNG12_Task1.Response;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 
@@ -18,16 +17,18 @@ namespace HNG12_Task1.Controller
         }
 
         [HttpGet("classify-number")]
-        public IActionResult ClassifyNumber()
+        public IActionResult ClassifyNumber([FromQuery] string number)
         {
-            var numberQuery = HttpContext.Request.Query["number"].ToString();
 
             // ✅ Validate input early and return immediately
-            if (string.IsNullOrWhiteSpace(numberQuery) || !int.TryParse(numberQuery, out int parsedNumber))
+            if (string.IsNullOrWhiteSpace(number) || !int.TryParse(number, out int parsedNumber))
             {
-                return BadRequest(new { error = true, number = numberQuery });
+                return BadRequest(new
+                {
+                    error = true,
+                    number = number
+                });
             }
-
             return Ok(ClassifyValidNumber(parsedNumber));
         }
 
@@ -56,9 +57,12 @@ namespace HNG12_Task1.Controller
         // Determine if the number is prime
         private bool IsPrime(int number)
         {
-            if (number < 2) return false;
-            if (number == 2) return true;
-            if (number % 2 == 0) return false;
+            if (number < 2) 
+                return false;
+            if (number == 2) 
+                return true;
+            if (number % 2 == 0) 
+                return false;
 
             int limit = (int)Math.Sqrt(number);
             for (int i = 3; i <= limit; i += 2)
@@ -71,9 +75,11 @@ namespace HNG12_Task1.Controller
         // Determine if the number is a perfect number
         private bool IsPerfect(int number)
         {
-            if (number < 1) return false;
+            if (number < 1) 
+                return false;
 
-            int sum = 1, sqrt = (int)Math.Sqrt(number);
+            int sum = 1;
+            int sqrt = (int)Math.Sqrt(number);
             for (int i = 2; i <= sqrt; i++)
             {
                 if (number % i == 0)
@@ -87,7 +93,7 @@ namespace HNG12_Task1.Controller
         // Determine if the number is an Armstrong number
         private bool IsArmstrong(int number)
         {
-            int positiveNumber = Math.Abs(number); // Ensure the number is positive
+            int positiveNumber = Math.Abs(number);
             int sum = 0, temp = positiveNumber, digits = positiveNumber.ToString().Length;
             while (temp != 0)
             {
@@ -113,7 +119,7 @@ namespace HNG12_Task1.Controller
             var client = _httpClientFactory.CreateClient();
             string fact = await client.GetStringAsync($"http://numbersapi.com/{number}/math");
 
-            _funFactCache[number] = fact; // Cache the fact for future use
+            _funFactCache[number] = fact;
             return fact;
         }
     }
