@@ -18,49 +18,38 @@ namespace HNG12_Task1.Controller
         }
 
         [HttpGet("classify-number")]
-        public async Task<IActionResult> ClassifyNumber()
+        public IActionResult ClassifyNumber()
         {
             var numberQuery = HttpContext.Request.Query["number"].ToString();
 
-            // ✅ Validate input
-            if (string.IsNullOrWhiteSpace(numberQuery))
-            {
-                return BadRequest(new { error = true, number = "" });
-            }
-
-            if (!int.TryParse(numberQuery, out int parsedNumber))
+            // ✅ Validate input early and return immediately
+            if (string.IsNullOrWhiteSpace(numberQuery) || !int.TryParse(numberQuery, out int parsedNumber))
             {
                 return BadRequest(new { error = true, number = numberQuery });
             }
 
-            // ✅ Run calculations synchronously (fast operations)
-            var isPrime = IsPrime(parsedNumber);
-            var isPerfect = IsPerfect(parsedNumber);
-            var isArmstrong = IsArmstrong(parsedNumber);
-            var digitSum = GetDigitSum(parsedNumber);
+            return Ok(ClassifyValidNumber(parsedNumber));
+        }
 
-            // ✅ Prepare properties list (sorted for consistency)
-            var properties = new List<string> { parsedNumber % 2 == 0 ? "even" : "odd" };
+        private NumberClassificationResponse ClassifyValidNumber(int number)
+        {
+            var isPrime = IsPrime(number);
+            var isPerfect = IsPerfect(number);
+            var isArmstrong = IsArmstrong(number);
+            var digitSum = GetDigitSum(number);
+            var properties = new List<string> { number % 2 == 0 ? "even" : "odd" };
             if (isArmstrong) properties.Add("armstrong");
-            properties.Sort(); // Ensures predictable order
+            properties.Sort();
 
-            // ✅ Fetch fun fact asynchronously with timeout (non-blocking)
-            var funFactTask = GetFunFact(parsedNumber);
-            var timeoutTask = Task.Delay(500); // Limit fun fact fetch to 500ms
-            var completedTask = await Task.WhenAny(funFactTask, timeoutTask);
-
-            var funFact = completedTask == funFactTask ? await funFactTask : "Fun fact unavailable";
-
-            // ✅ Return response
-            return Ok(new NumberClassificationResponse
+            return new NumberClassificationResponse
             {
-                Number = parsedNumber,
+                Number = number,
                 is_prime = isPrime,
                 is_perfect = isPerfect,
                 Properties = properties,
                 digit_sum = digitSum,
-                fun_fact = funFact
-            });
+                fun_fact = GetFunFact(number).Result
+            };
         }
 
 
